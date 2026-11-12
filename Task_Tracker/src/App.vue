@@ -14,6 +14,10 @@ function addTask() {
     newTask.value = ''
   }
 }
+function deleteTask(taskId) {
+  tasks.value = tasks.value.filter(task => task.id !== taskId)
+}
+
 
 </script> 
 <template>
@@ -25,10 +29,16 @@ function addTask() {
       <input v-model="newTask" placeholder="Enter a new task" />
       <button type="submit">Add Task</button>
     </form>
-    <h2>My Tasks</h2> 
-    <div class= "Tasks" v-for="task in tasks" :key="task.id"> 
-      <p> {{ task.title}} {{ task.status }} </p> 
-    </div> 
+   
+<h2>My Tasks</h2>
+
+<div class="Tasks" v-for="task in tasks" :key="task.id">
+  <p>
+    {{ task.title }} {{ task.status }}
+    <button @click="deleteTask(task.id)">Delete</button>
+  </p>
+</div>
+
 
   </div>
 </template>
