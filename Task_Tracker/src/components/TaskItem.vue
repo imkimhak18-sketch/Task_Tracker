@@ -1,5 +1,5 @@
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, computed, nextTick } from 'vue'
 
 const props = defineProps({
   task: {
@@ -12,34 +12,26 @@ const props = defineProps({
   }
 })
 
-// Events sent to TaskList (new: update-task)
 const emit = defineEmits(['delete-task', 'toggle-status', 'update-task'])
 
-// Is this row being edited right now?
+/* ---------- Edit feature ---------- */
 const isEditing = ref(false)
-
-// The text inside the edit input
 const editText = ref('')
-
-// Reference to the input element so we can focus it
 const editInput = ref(null)
 
 async function startEditing() {
   editText.value = props.task.title
   isEditing.value = true
 
-  // Wait for Vue to show the input, then focus it
   await nextTick()
   editInput.value.focus()
 }
 
 function saveEdit() {
-  // Already finished (prevents saving twice)
   if (!isEditing.value) return
 
   const newTitle = editText.value.trim()
 
-  // Only send an update if it is not empty and actually changed
   if (newTitle !== '' && newTitle !== props.task.title) {
     emit('update-task', { id: props.task.id, title: newTitle })
   }
@@ -50,6 +42,43 @@ function saveEdit() {
 function cancelEdit() {
   isEditing.value = false
 }
+
+/* ---------- Due date feature ---------- */
+
+// Today's date as text: YYYY-MM-DD (using the local time zone)
+function getToday() {
+  const now = new Date()
+  const year = now.getFullYear()
+  const month = String(now.getMonth() + 1).padStart(2, '0')
+  const day = String(now.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+// 'none' | 'normal' | 'today' | 'overdue'
+const dueState = computed(() => {
+  const due = props.task.dueDate
+
+  // No due date (also covers old tasks saved before this feature)
+  if (!due) return 'none'
+
+  // Completed tasks are never overdue
+  if (props.task.status === 'Completed') return 'normal'
+
+  const today = getToday()
+
+  if (due < today) return 'overdue'
+  if (due === today) return 'today'
+  return 'normal'
+})
+
+// Show the due date like the "Date Created" column: MM/DD/YYYY
+const formattedDueDate = computed(() => {
+  const due = props.task.dueDate
+  if (!due) return ''
+
+  const [year, month, day] = due.split('-')
+  return `${month}/${day}/${year}`
+})
 </script>
 
 <template>
@@ -58,7 +87,6 @@ function cancelEdit() {
     <td>{{ index + 1 }}</td>
 
     <td>
-      <!-- Edit mode -->
       <input
         v-if="isEditing"
         ref="editInput"
@@ -69,7 +97,6 @@ function cancelEdit() {
         @blur="saveEdit"
       />
 
-      <!-- Normal mode -->
       <span
         v-else
         class="task-title"
@@ -81,6 +108,19 @@ function cancelEdit() {
     </td>
 
     <td>{{ task.date }}</td>
+
+    <!-- NEW: Due date cell -->
+    <td>
+      <span v-if="dueState === 'none'" class="no-due">
+        No due date
+      </span>
+
+      <div v-else :class="['due', dueState]">
+        <span>{{ formattedDueDate }}</span>
+        <small v-if="dueState === 'overdue'">Overdue</small>
+        <small v-else-if="dueState === 'today'">Due today</small>
+      </div>
+    </td>
 
     <td>
       <button
@@ -118,6 +158,32 @@ function cancelEdit() {
   color: white;
   outline: none;
   text-align: center;
+}
+
+/* Due date styles */
+.no-due {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.due {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.due small {
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.due.overdue {
+  color: #f87171;
+}
+
+.due.today {
+  color: #fbbf24;
 }
 
 .status-button {

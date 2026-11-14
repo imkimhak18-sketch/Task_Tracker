@@ -1,10 +1,10 @@
-
 <script setup>
 import { ref } from 'vue'
 
 const newTask = ref('')
+const dueDate = ref('')   // format: YYYY-MM-DD, or '' if not chosen
 
-// Send the task to the parent component
+// Send the task (title + due date) to the parent
 const emit = defineEmits(['add-task'])
 
 function submitTask() {
@@ -12,10 +12,14 @@ function submitTask() {
     return
   }
 
-  emit('add-task', newTask.value.trim())
+  emit('add-task', {
+    title: newTask.value.trim(),
+    dueDate: dueDate.value
+  })
 
-  // Clear the input after adding
+  // Clear the inputs after adding
   newTask.value = ''
+  dueDate.value = ''
 }
 </script>
 
@@ -26,6 +30,14 @@ function submitTask() {
       v-model="newTask"
       type="text"
       placeholder="Enter your task..."
+      @keyup.enter="submitTask"
+    />
+
+    <input
+      v-model="dueDate"
+      type="date"
+      class="date-input"
+      title="Due date (optional)"
       @keyup.enter="submitTask"
     />
 
@@ -52,6 +64,12 @@ input {
   background-color: #1f2937;
   color: white;
   outline: none;
+}
+
+.date-input {
+  flex: none;
+  width: 160px;
+  color-scheme: dark; /* makes the calendar popup dark */
 }
 
 button {
