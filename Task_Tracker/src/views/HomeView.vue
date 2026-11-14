@@ -1,22 +1,33 @@
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 import AddTask from '../components/AddTask.vue'
 import TaskFilter from '../components/TaskFilter.vue'
 import TaskList from '../components/TaskList.vue'
 
-// Store all tasks
-const tasks = ref([])
+// Load saved tasks from the browser (or start with an empty list)
+const savedTasks = localStorage.getItem('tasks')
+const tasks = ref(savedTasks ? JSON.parse(savedTasks) : [])
+
+// Save to the browser every time tasks change
+watch(
+  tasks,
+  (newTasks) => {
+    localStorage.setItem('tasks', JSON.stringify(newTasks))
+  },
+  { deep: true }
+)
 
 // Which filter is selected: 'All', 'Pending' or 'Completed'
 const currentFilter = ref('All')
 
-// Add a new task
-function addTask(title) {
+// CHANGED: receives an object { title, dueDate }
+function addTask({ title, dueDate }) {
   tasks.value.push({
     id: Date.now(),
     title: title,
     date: new Date().toLocaleDateString(),
+    dueDate: dueDate,        // NEW ('' means no due date)
     status: 'Pending'
   })
 }
@@ -25,14 +36,7 @@ function addTask(title) {
 function deleteTask(id) {
   tasks.value = tasks.value.filter(task => task.id !== id)
 }
-// Update a task's title
-function updateTask(updatedTask) {
-  const task = tasks.value.find(task => task.id === updatedTask.id)
 
-  if (task) {
-    task.title = updatedTask.title
-  }
-}
 // Change task status
 function toggleStatus(id) {
   const task = tasks.value.find(task => task.id === id)
@@ -40,6 +44,15 @@ function toggleStatus(id) {
   if (task) {
     task.status =
       task.status === 'Pending' ? 'Completed' : 'Pending'
+  }
+}
+
+// Update a task's title
+function updateTask(updatedTask) {
+  const task = tasks.value.find(task => task.id === updatedTask.id)
+
+  if (task) {
+    task.title = updatedTask.title
   }
 }
 
@@ -75,14 +88,12 @@ const counts = computed(() => ({
 
     <AddTask @add-task="addTask" />
 
-    <!-- NEW: filter buttons -->
     <TaskFilter
       :current-filter="currentFilter"
       :counts="counts"
       @change-filter="setFilter"
     />
 
-    <!-- CHANGED: send filteredTasks instead of tasks -->
     <TaskList
       :tasks="filteredTasks"
       @delete-task="deleteTask"

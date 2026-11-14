@@ -24,6 +24,7 @@ defineEmits(['delete-task', 'toggle-status', 'update-task'])
           <th>No.</th>
           <th>Task Name</th>
           <th>Date Created</th>
+          <th>Due Date</th>
           <th>Status</th>
           <th>Action</th>
         </tr>
@@ -82,15 +83,15 @@ defineEmits(['delete-task', 'toggle-status', 'update-task'])
 }
 
 .task-table th:nth-child(1) {
-  width: 8%;
+  width: 7%;
 }
 
 .task-table th:nth-child(2) {
-  width: 32%;
+  width: 27%;
 }
 
 .task-table th:nth-child(3) {
-  width: 22%;
+  width: 17%;
 }
 
 .task-table th:nth-child(4) {
@@ -98,9 +99,12 @@ defineEmits(['delete-task', 'toggle-status', 'update-task'])
 }
 
 .task-table th:nth-child(5) {
-  width: 20%;
+  width: 15%;
 }
 
+.task-table th:nth-child(6) {
+  width: 16%;
+}
 .empty-message {
   color: #9ca3af;
   text-align: center;
