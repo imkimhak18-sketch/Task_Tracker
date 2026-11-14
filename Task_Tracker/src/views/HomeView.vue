@@ -1,12 +1,15 @@
-
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 
 import AddTask from '../components/AddTask.vue'
+import TaskFilter from '../components/TaskFilter.vue'
 import TaskList from '../components/TaskList.vue'
 
 // Store all tasks
 const tasks = ref([])
+
+// Which filter is selected: 'All', 'Pending' or 'Completed'
+const currentFilter = ref('All')
 
 // Add a new task
 function addTask(title) {
@@ -32,6 +35,27 @@ function toggleStatus(id) {
       task.status === 'Pending' ? 'Completed' : 'Pending'
   }
 }
+
+// Change the selected filter
+function setFilter(filter) {
+  currentFilter.value = filter
+}
+
+// The tasks that match the selected filter
+const filteredTasks = computed(() => {
+  if (currentFilter.value === 'All') {
+    return tasks.value
+  }
+
+  return tasks.value.filter(task => task.status === currentFilter.value)
+})
+
+// Numbers shown on the filter buttons
+const counts = computed(() => ({
+  all: tasks.value.length,
+  pending: tasks.value.filter(task => task.status === 'Pending').length,
+  completed: tasks.value.filter(task => task.status === 'Completed').length
+}))
 </script>
 
 <template>
@@ -42,12 +66,18 @@ function toggleStatus(id) {
       <span class="tracker"> Tracker</span>
     </h1>
 
-    <!-- Add Task Component -->
     <AddTask @add-task="addTask" />
 
-    <!-- Task List Component -->
+    <!-- NEW: filter buttons -->
+    <TaskFilter
+      :current-filter="currentFilter"
+      :counts="counts"
+      @change-filter="setFilter"
+    />
+
+    <!-- CHANGED: send filteredTasks instead of tasks -->
     <TaskList
-      :tasks="tasks"
+      :tasks="filteredTasks"
       @delete-task="deleteTask"
       @toggle-status="toggleStatus"
     />
