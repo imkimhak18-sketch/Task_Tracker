@@ -11,7 +11,7 @@ defineProps({
 })
 
 // Events that this component can send to its parent
-defineEmits(['delete-task', 'toggle-status'])
+defineEmits(['delete-task', 'toggle-status', 'update-task'])
 </script>
 
 <template>
@@ -37,6 +37,7 @@ defineEmits(['delete-task', 'toggle-status'])
           :index="index"
           @delete-task="$emit('delete-task', $event)"
           @toggle-status="$emit('toggle-status', $event)"
+          @update-task="$emit('update-task', $event)"
         />
       </tbody>
 

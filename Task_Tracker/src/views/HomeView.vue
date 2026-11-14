@@ -25,7 +25,14 @@ function addTask(title) {
 function deleteTask(id) {
   tasks.value = tasks.value.filter(task => task.id !== id)
 }
+// Update a task's title
+function updateTask(updatedTask) {
+  const task = tasks.value.find(task => task.id === updatedTask.id)
 
+  if (task) {
+    task.title = updatedTask.title
+  }
+}
 // Change task status
 function toggleStatus(id) {
   const task = tasks.value.find(task => task.id === id)
@@ -80,6 +87,7 @@ const counts = computed(() => ({
       :tasks="filteredTasks"
       @delete-task="deleteTask"
       @toggle-status="toggleStatus"
+      @update-task="updateTask"
     />
 
   </div>

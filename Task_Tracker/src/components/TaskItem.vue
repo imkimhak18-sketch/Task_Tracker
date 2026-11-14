@@ -1,6 +1,7 @@
-
 <script setup>
-defineProps({
+import { ref, nextTick } from 'vue'
+
+const props = defineProps({
   task: {
     type: Object,
     required: true
@@ -11,8 +12,44 @@ defineProps({
   }
 })
 
-// Events sent to TaskList
-defineEmits(['delete-task', 'toggle-status'])
+// Events sent to TaskList (new: update-task)
+const emit = defineEmits(['delete-task', 'toggle-status', 'update-task'])
+
+// Is this row being edited right now?
+const isEditing = ref(false)
+
+// The text inside the edit input
+const editText = ref('')
+
+// Reference to the input element so we can focus it
+const editInput = ref(null)
+
+async function startEditing() {
+  editText.value = props.task.title
+  isEditing.value = true
+
+  // Wait for Vue to show the input, then focus it
+  await nextTick()
+  editInput.value.focus()
+}
+
+function saveEdit() {
+  // Already finished (prevents saving twice)
+  if (!isEditing.value) return
+
+  const newTitle = editText.value.trim()
+
+  // Only send an update if it is not empty and actually changed
+  if (newTitle !== '' && newTitle !== props.task.title) {
+    emit('update-task', { id: props.task.id, title: newTitle })
+  }
+
+  isEditing.value = false
+}
+
+function cancelEdit() {
+  isEditing.value = false
+}
 </script>
 
 <template>
@@ -20,7 +57,28 @@ defineEmits(['delete-task', 'toggle-status'])
 
     <td>{{ index + 1 }}</td>
 
-    <td>{{ task.title }}</td>
+    <td>
+      <!-- Edit mode -->
+      <input
+        v-if="isEditing"
+        ref="editInput"
+        v-model="editText"
+        class="edit-input"
+        @keyup.enter="saveEdit"
+        @keyup.esc="cancelEdit"
+        @blur="saveEdit"
+      />
+
+      <!-- Normal mode -->
+      <span
+        v-else
+        class="task-title"
+        title="Double-click to edit"
+        @dblclick="startEditing"
+      >
+        {{ task.title }}
+      </span>
+    </td>
 
     <td>{{ task.date }}</td>
 
@@ -47,6 +105,21 @@ defineEmits(['delete-task', 'toggle-status'])
 </template>
 
 <style scoped>
+.task-title {
+  cursor: pointer;
+}
+
+.edit-input {
+  width: 90%;
+  padding: 8px;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  background-color: #1f2937;
+  color: white;
+  outline: none;
+  text-align: center;
+}
+
 .status-button {
   border: none;
   padding: 7px 14px;
